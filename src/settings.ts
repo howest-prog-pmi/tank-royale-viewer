@@ -89,7 +89,16 @@ export function load(): Settings {
   } catch {
     current = { ...DEFAULTS }
   }
+  applyUrlParams()
   return current
+}
+
+// A link like ?server=wss://host:port sets (and remembers) the server URL
+function applyUrlParams(): void {
+  const server = new URLSearchParams(window.location.search).get('server')
+  if (server && /^wss?:\/\/\S+$/i.test(server)) {
+    save({ url: server })
+  }
 }
 
 export function save(settings: Partial<Settings>): void {

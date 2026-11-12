@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeEach } from 'vitest'
+import { describe, it, expect, beforeEach, afterEach } from 'vitest'
 import * as settings from './settings'
 
 const STORAGE_KEY = 'tank-royale-viewer-settings'
@@ -120,5 +120,31 @@ describe('per-key type validation', () => {
     expect(loaded.showBattleEventFeed).toBe(true)
     expect(loaded.showBulletHitEvents).toBe(true)
     expect(loaded.showRammingEvents).toBe(true)
+  })
+})
+
+describe('server URL parameter', () => {
+  afterEach(() => {
+    window.history.replaceState(null, '', '/')
+  })
+
+  it('uses ?server= as the server URL and remembers it', () => {
+    window.history.replaceState(null, '', '/?server=wss://example.devtunnels.ms')
+    settings.load()
+    expect(settings.get().url).toBe('wss://example.devtunnels.ms')
+    expect(JSON.parse(localStorage.getItem(STORAGE_KEY)!).url).toBe('wss://example.devtunnels.ms')
+  })
+
+  it('overrides a previously saved server URL', () => {
+    settings.save({ url: 'ws://old:7654' })
+    window.history.replaceState(null, '', '/?server=ws://new:7654')
+    settings.load()
+    expect(settings.get().url).toBe('ws://new:7654')
+  })
+
+  it('ignores values that are not ws:// or wss:// URLs', () => {
+    window.history.replaceState(null, '', '/?server=javascript:alert(1)')
+    settings.load()
+    expect(settings.get().url).toBe(settings.getDefaults().url)
   })
 })
